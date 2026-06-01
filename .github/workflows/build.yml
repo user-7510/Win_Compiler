@@ -23,27 +23,40 @@ jobs:
         python -m pip install --upgrade pip
         pip install numpy pillow pdf2image opencv-python pyinstaller
 
-    - name: Download and Setup Poppler via Python
+    - name: Download and Setup Poppler dynamically
       shell: python
       run: |
         import urllib.request
+        import json
         import zipfile
         import os
         import shutil
 
-        url = "https://github.com/ossres/poppler-windows/releases/download/v24.08.0-0/poppler-24.08.0_0.zip"
-        print("Downloading Poppler...")
-        urllib.request.urlretrieve(url, "poppler.zip")
+        # 1. 透過 API 抓取最新版 Poppler 的真實載點
+        api = "https://api.github.com/repos/oschwartz10612/poppler-windows/releases/latest"
+        req = urllib.request.Request(api, headers={'User-Agent': 'Python'})
+        with urllib.request.urlopen(req) as res:
+            data = json.loads(res.read().decode('utf-8'))
+            url = next(a['browser_download_url'] for a in data['assets'] if a['name'].endswith('.zip'))
         
-        print("Extracting...")
-        with zipfile.ZipFile("poppler.zip", 'r') as zip_ref:
-            zip_ref.extractall("C:\\poppler_tmp")
+        # 2. 下載並解壓縮
+        urllib.request.urlretrieve(url, "pop.zip")
+        with zipfile.ZipFile("pop.zip", 'r') as zf:
+            zf.extractall("C:\\pop_tmp")
             
-        print("Configuring directory...")
+        # 3. 全自動尋找執行檔位置 (無視官方資料夾結構變化)
+        bdir = None
+        for root, dirs, files in os.walk("C:\\pop_tmp"):
+            if "pdftoppm.exe" in files:
+                bdir = root
+                break
+                
+        # 4. 強制歸位到 C:\poppler\bin
         if os.path.exists("C:\\poppler"):
             shutil.rmtree("C:\\poppler")
-        shutil.move("C:\\poppler_tmp\\poppler-24.08.0", "C:\\poppler")
-        print("Poppler setup complete!")
+        os.makedirs("C:\\poppler")
+        shutil.move(bdir, "C:\\poppler\\bin")
+        print("Success!")
 
     - name: Build with PyInstaller
       run: |

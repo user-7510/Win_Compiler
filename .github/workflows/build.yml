@@ -23,12 +23,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install numpy pillow pdf2image opencv-python pyinstaller
 
-    - name: Download Poppler
-      shell: powershell
+    - name: Download and Setup Poppler via Python
+      shell: python
       run: |
-        Invoke-WebRequest -Uri "https://github.com/ossres/poppler-windows/releases/download/v24.08.0-0/poppler-24.08.0_0.zip" -OutFile "poppler.zip"
-        Expand-Archive -Path "poppler.zip" -DestinationPath "C:\poppler_tmp"
-        Move-Item -Path "C:\poppler_tmp\poppler-24.08.0" -Destination "C:\poppler"
+        import urllib.request
+        import zipfile
+        import os
+        import shutil
+
+        # 使用絕對穩定的 GitHub Release 靜態連結
+        url = "https://github.com/ossres/poppler-windows/releases/download/v24.08.0-0/poppler-24.08.0_0.zip"
+        print("正在下載 Poppler...")
+        urllib.request.urlretrieve(url, "poppler.zip")
+        
+        print("正在解壓縮...")
+        with zipfile.ZipFile("poppler.zip", 'r') as zip_ref:
+            zip_ref.extractall("C:\\poppler_tmp")
+            
+        print("正在配置目錄...")
+        if os.path.exists("C:\\poppler"):
+            shutil.rmtree("C:\\poppler")
+        shutil.move("C:\\poppler_tmp\\poppler-24.08.0", "C:\\poppler")
+        print("Poppler 設定成功！")
 
     - name: Build with PyInstaller
       run: |

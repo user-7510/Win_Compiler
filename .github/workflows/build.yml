@@ -31,20 +31,19 @@ jobs:
         import os
         import shutil
 
-        # 使用絕對穩定的 GitHub Release 靜態連結
         url = "https://github.com/ossres/poppler-windows/releases/download/v24.08.0-0/poppler-24.08.0_0.zip"
-        print("正在下載 Poppler...")
+        print("Downloading Poppler...")
         urllib.request.urlretrieve(url, "poppler.zip")
         
-        print("正在解壓縮...")
+        print("Extracting...")
         with zipfile.ZipFile("poppler.zip", 'r') as zip_ref:
             zip_ref.extractall("C:\\poppler_tmp")
             
-        print("正在配置目錄...")
+        print("Configuring directory...")
         if os.path.exists("C:\\poppler"):
             shutil.rmtree("C:\\poppler")
         shutil.move("C:\\poppler_tmp\\poppler-24.08.0", "C:\\poppler")
-        print("Poppler 設定成功！")
+        print("Poppler setup complete!")
 
     - name: Build with PyInstaller
       run: |
